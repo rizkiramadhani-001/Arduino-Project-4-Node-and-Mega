@@ -2,9 +2,12 @@
 #include <DHT_U.h>
 
 #define DHTPIN 2
-#define DHTTYPE DHT22
+#define DHTTYPE DHT11
 
 DHT dht(DHTPIN, DHTTYPE);
+
+unsigned long lastRead = 0;       // waktu terakhir baca sensor
+const unsigned long interval = 2000; // jeda 2 detik
 
 void setup() {
   dht.begin();
@@ -12,22 +15,19 @@ void setup() {
 }
 
 void loop() {
-  // cek apakah ada perintah masuk
-  if (Serial.available()) {
-    String cmd = Serial.readStringUntil('\n'); // baca sampai enter
-    cmd.trim();  // hapus spasi/enter
+  unsigned long now = millis();
 
-    if (cmd == "GET") {
-      int temp = dht.readTemperature();
+  // cek apakah sudah lewat interval
+  if (now - lastRead >= interval) {
+    lastRead = now;
 
-      if (isnan(temp)) {
-        Serial.println("Error reading sensor!");
-      } else {
-        Serial.print("Temperature: ");
-        Serial.println(temp);
-      }
+    float temp = dht.readTemperature();  // pakai float biar lebih akurat
+
+    if (isnan(temp)) {
+      Serial.println("Error reading sensor!");
     } else {
-      Serial.println("Unknown command");
+      Serial.print("Temperature: ");
+      Serial.println(temp);
     }
   }
 }
